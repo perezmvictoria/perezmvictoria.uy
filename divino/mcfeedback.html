@@ -289,7 +289,7 @@ input.invalid,textarea.invalid{border-color:var(--error);background:var(--error-
 
 /* Endpoint del Google Apps Script desplegado como web app.
    Con la constante vacía el formulario funciona igual y guarda en localStorage. */
-const ENDPOINT = "";
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbwBo116c9wl629T36gTtDllO4yInOcT4NjK2d-zdmAq0BoK3IqhKlzXBo2vZthDkfXJgg/exec";
 
 /* Cierre. El script tiene la misma fecha y es el que deja de escribir filas.
    Hora de Uruguay, sin horario de verano. */
@@ -300,7 +300,7 @@ const CERRADO = new URLSearchParams(location.search).get("vista")==="cierre" || 
 
 /* ---------- contenido de las preguntas ---------- */
 
-/* Temas del paso 4. Cada uno es una columna de la hoja: p4_claridad_<k>.
+/* Temas del paso 4. Cada uno es una columna de la hoja: q4_claridad_<k>.
    [PENDIENTE] ajustar al contenido definitivo de la master class. Si cambia la
    clave k, cambia también la lista COLS del script. */
 const TEMAS = [
@@ -316,59 +316,59 @@ const INTERES = [0,1];
 const Q = [
 
 /* 1 · nombre y correo */
-{id:"identidad", tipo:"campos", eyebrow:"Antes de empezar",
+{id:"q1", tipo:"campos", eyebrow:"Antes de empezar",
   t:"¿Quién sos?",
   hint:"Usá el mismo correo con el que respondiste el formulario inicial: es lo que une las dos respuestas.",
   campos:[
-    {id:"nombre", label:"Nombre y apellido", ph:"Nombre y apellido", ac:"name", cap:"words"},
-    {id:"mail",   label:"Tu correo", ph:"tu@correo.com", mail:true, ac:"email", cap:"off"}
+    {id:"q1_nombre", label:"Nombre y apellido", ph:"Nombre y apellido", ac:"name", cap:"words"},
+    {id:"q1_mail",   label:"Tu correo", ph:"tu@correo.com", mail:true, ac:"email", cap:"off"}
   ]},
 
 /* 2 · utilidad — escala de 1 a 5 */
-{id:"p2", tipo:"escala", eyebrow:"Qué te llevás",
+{id:"q2", tipo:"escala", eyebrow:"Qué te llevás",
   t:"¿Qué tan útil te resultó la master class para tu trabajo?",
   hint:"Tocá un número del 1 al 5.",
   extremos:["1 · Poco útil","5 · Muy útil"]},
 
 /* 3 · de qué se trató — obligatoria */
-{id:"p3", tipo:"largo", eyebrow:"Qué te llevás", req:true,
+{id:"q3", tipo:"largo", eyebrow:"Qué te llevás", req:true,
   t:"Si tuvieras que contarle a alguien de tu equipo de qué se trató la master class, ¿qué le dirías?",
   hint:"En pocas palabras, como se lo contarías.",
   ph:"Lo que le dirías",
   err:"Contanos en pocas palabras de qué se trató."},
 
 /* 4 · claridad por tema */
-{id:"p4", tipo:"claridad", eyebrow:"Qué te llevás",
+{id:"q4", tipo:"claridad", eyebrow:"Qué te llevás",
   t:"¿Qué tan claro te quedó cada tema?",
   hint:"Elegí una opción en cada uno.",
-  subProgreso:()=>`${Object.keys(R.p4||{}).length} de ${TEMAS.length} temas`},
+  subProgreso:()=>`${Object.keys(R.q4||{}).length} de ${TEMAS.length} temas`},
 
 /* 5 · qué llegó — obligatoria */
-{id:"p5", tipo:"largo", eyebrow:"Qué te llevás", req:true,
+{id:"q5", tipo:"largo", eyebrow:"Qué te llevás", req:true,
   t:"¿Qué te resultó más útil de lo que vimos hoy?",
   ph:"Lo que más te sirvió",
   err:"Contanos qué te resultó más útil."},
 
 /* 6 · qué cambiarías — opcional */
-{id:"p6", tipo:"largo", eyebrow:"Qué te llevás", opcional:true,
+{id:"q6", tipo:"largo", eyebrow:"Qué te llevás", opcional:true,
   t:"¿Qué te hubiera gustado que fuera distinto?",
   hint:"Podés pensar en el tiempo, el enfoque, el formato o la dinámica.",
   ph:"Lo que cambiarías"},
 
 /* 7 · compromiso concreto — obligatoria */
-{id:"p7", tipo:"texto", eyebrow:"Qué te llevás", req:true,
+{id:"q7", tipo:"texto", eyebrow:"Qué te llevás", req:true,
   t:"¿Qué tarea concreta de tu semana vas a probar con IA?",
   hint:"Una línea alcanza.", ph:"La tarea que vas a probar",
   err:"Escribí la tarea que vas a probar: una línea alcanza."},
 
 /* 8 · lo que quedó pendiente — opcional */
-{id:"p8", tipo:"largo", eyebrow:"Qué falta", opcional:true,
+{id:"q8", tipo:"largo", eyebrow:"Qué falta", opcional:true,
   t:"¿Qué quedó dando vueltas?",
   hint:"Algo que quisiste preguntar y quedó para otro momento.",
   ph:"Tu pregunta o tu duda"},
 
 /* 9 · Seguir: interés en los talleres de especialización, y por qué */
-{id:"p9", tipo:"radio", eyebrow:"Seguir",
+{id:"q9", tipo:"radio", eyebrow:"Seguir",
   caso:{lbl:"Lo que viene", html:
     `<p><strong>Después de la master class vienen talleres de especialización.</strong> Son encuentros en grupos reducidos. Cada encuentro se enfocará en tareas puntuales del trabajo de quienes participan y se trabajará con casos prácticos. Entre un encuentro y otro, cada persona deberá aplicar lo visto para poder traer consultas y dudas.</p>
      <p>Los cupos son limitados. Divino arma los grupos en base al interés expresado y al resultado del barómetro de cada persona.</p>`},
@@ -387,15 +387,15 @@ const Q = [
 /* 10 · qué temas quieren ver — texto libre, obligatoria.
    Aparece solo si en el paso 9 dijo que sí. Cuenta como paso hasta que el 9
    esté respondido: el total baja, nunca sube. */
-{id:"p10", tipo:"largo", eyebrow:"Seguir", req:true,
-  si:()=>R.p9===undefined || INTERES.includes(R.p9),
+{id:"q10", tipo:"largo", eyebrow:"Seguir", req:true,
+  si:()=>R.q9===undefined || INTERES.includes(R.q9),
   t:"¿Qué temas te gustaría ver en los talleres de especialización?",
   hint:"Escribilo como lo dirías vos.",
   ph:"Los temas que te gustaría ver",
   err:"Contanos qué temas te gustaría ver."},
 
 /* 11 · cierre — opcional */
-{id:"p11", tipo:"largo", eyebrow:"Para terminar", opcional:true,
+{id:"q11", tipo:"largo", eyebrow:"Para terminar", opcional:true,
   t:"¿Algo que quieras agregar?",
   ph:"Lo que quieras contarnos"}
 ];
@@ -654,13 +654,13 @@ function validar(q){
   };
 
   if(q.tipo==="campos"){
-    const nom = R.nombre||"", mail = R.mail||"";
-    if(!nom) marcar($("#c-nombre"),"Escribí tu nombre y apellido.");
-    else if(nom.split(/\s+/).length<2) marcar($("#c-nombre"),"Sumá tu apellido.");
-    if(!mail) marcar($("#c-mail"),"Escribí tu correo.");
-    else if(!mail.includes("@")) marcar($("#c-mail"),"Al correo le falta la @.");
+    const nom = R.q1_nombre||"", mail = R.q1_mail||"";
+    if(!nom) marcar($("#c-q1_nombre"),"Escribí tu nombre y apellido.");
+    else if(nom.split(/\s+/).length<2) marcar($("#c-q1_nombre"),"Sumá tu apellido.");
+    if(!mail) marcar($("#c-q1_mail"),"Escribí tu correo.");
+    else if(!mail.includes("@")) marcar($("#c-q1_mail"),"Al correo le falta la @.");
     else if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail))
-      marcar($("#c-mail"),"Revisá el correo: tiene que quedar como nombre@dominio.com.");
+      marcar($("#c-q1_mail"),"Revisá el correo: tiene que quedar como nombre@dominio.com.");
   }
 
   if(q.tipo==="texto" && q.req && (R[q.id]||"").length<2)
@@ -720,24 +720,24 @@ function renderGracias(){
 function payload(){
   const nombreOp = id=>{const q=Q.find(x=>x.id===id), i=R[id]; return (i===undefined||!q.ops[i])?"":q.ops[i].t};
   const claridad = Object.fromEntries(TEMAS.map(tm=>{
-    const i = (R.p4||{})[tm.k];
-    return ["p4_claridad_"+tm.k, i===undefined ? "" : NIVELES[i]];
+    const i = (R.q4||{})[tm.k];
+    return ["q4_claridad_"+tm.k, i===undefined ? "" : NIVELES[i]];
   }));
 
   return {
     timestamp:new Date().toISOString(),
-    nombre:R.nombre||"", mail:(R.mail||"").toLowerCase(),
+    q1_nombre:R.q1_nombre||"", q1_mail:(R.q1_mail||"").toLowerCase(),
 
-    p2_utilidad:R.p2,
-    p3_de_que_se_trato:R.p3||"",
+    q2_utilidad:R.q2,
+    q3_de_que_se_trato:R.q3||"",
     ...claridad,
-    p5_mas_util:R.p5||"",
-    p6_distinto:R.p6||"",
-    p7_tarea_semana:R.p7||"",
-    p8_dando_vueltas:R.p8||"",
-    p9_talleres:nombreOp("p9"), p9_por_que:R.p9_por_que||"",
-    p10_temas:visibles().some(q=>q.id==="p10") ? (R.p10||"") : "",
-    p11_agregar:R.p11||""
+    q5_mas_util:R.q5||"",
+    q6_distinto:R.q6||"",
+    q7_tarea_semana:R.q7||"",
+    q8_dando_vueltas:R.q8||"",
+    q9_talleres:nombreOp("q9"), q9_por_que:R.q9_por_que||"",
+    q10_temas:visibles().some(q=>q.id==="q10") ? (R.q10||"") : "",
+    q11_agregar:R.q11||""
   };
 }
 
