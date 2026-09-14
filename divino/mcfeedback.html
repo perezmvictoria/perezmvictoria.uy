@@ -198,6 +198,7 @@ button.btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
 .btn.primary:hover{background:var(--color-violet-deep)}
 .btn.ghost{padding:0 20px;border:1.5px solid var(--color-violet-main);background:transparent;color:var(--color-violet-main)}
 .btn.ghost:hover{background:var(--bg-subtle)}
+button.btn:disabled{opacity:.6;cursor:default}
 
 /* ---------- errores de validación ---------- */
 input.invalid,textarea.invalid{border-color:var(--error);background:var(--error-bg)}
@@ -214,6 +215,12 @@ input.invalid,textarea.invalid{border-color:var(--error);background:var(--error-
 .card-intro{font-size:17px;line-height:1.65;color:var(--fg-primary)}
 .envio{font-size:14px;color:var(--fg-secondary)}
 .envio.err{color:var(--error);font-weight:600}
+/* pantalla de envío fallido: tres acciones apiladas */
+.resultado .acciones{display:flex;flex-direction:column;gap:10px;margin:0 0 14px}
+.resultado .acciones .btn{
+  display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin:0;padding:0 20px;
+  font-size:16px;font-weight:600;border-radius:var(--radius-md);cursor:pointer;text-decoration:none;
+}
 
 @media(max-width:559px){ .bar-long{display:none} }
 @media(min-width:768px){
@@ -252,6 +259,8 @@ input.invalid,textarea.invalid{border-color:var(--error);background:var(--error-
   .resultado .card{padding:32px}
   .card-intro{font-size:20px;line-height:1.6;max-width:56ch}
   .envio{font-size:15px}
+  .resultado .acciones{max-width:360px}
+  .resultado .acciones .btn{min-height:52px;font-size:17px}
 }
 </style>
 </head>
@@ -286,6 +295,9 @@ input.invalid,textarea.invalid{border-color:var(--error);background:var(--error-
    útil, qué quedó pendiente e interés en los talleres de especialización.
    La persona ve un agradecimiento, sin puntaje.
    ========================================================================== */
+
+/* Si el envío falla, la persona puede mandar su respuesta por mail a esta dirección. */
+const MAIL_RESPALDO = "perez.mvictoria@gmail.com";
 
 /* Endpoint del Google Apps Script desplegado como web app.
    Con la constante vacía el formulario funciona igual y guarda en localStorage. */
@@ -458,13 +470,15 @@ function renderIntro(){
   </div>`;
 }
 
-function renderCierre(){
+function renderCierre(tarde){
   bar.hidden = true; nav.hidden = true;
   shell.innerHTML = `
   <div class="intro">
    <div class="card">
     <h1>El formulario ya cerró</h1>
-    <p class="lead">Recibimos respuestas hasta el miércoles 30 de septiembre a la noche. Gracias por acercarte.</p>
+    <p class="lead">${tarde
+      ? "El formulario cerró el miércoles 30 de septiembre a la noche, antes de que llegara tu respuesta. Gracias por acercarte."
+      : "Recibimos respuestas hasta el miércoles 30 de septiembre a la noche. Gracias por acercarte."}</p>
    </div>
   </div>`;
 }
@@ -698,7 +712,9 @@ function validar(q){
   return true;
 }
 
-/* ---------- agradecimiento ---------- */
+/* ---------- agradecimiento: aparece recién cuando la hoja confirmó la respuesta ---------- */
+
+let estadoEnvio = "";   // "ok" · "local"
 
 function renderGracias(){
   nav.hidden = true;
@@ -709,10 +725,10 @@ function renderGracias(){
     <div class="card">
       <p class="card-intro">Con tu respuesta vamos a trabajar en los grupos para los próximos encuentros.</p>
     </div>
-    <div class="envio" id="envio">Guardando tu respuesta…</div>
+    <div class="envio" id="envio">${estadoEnvio==="local"
+      ? "Modo local: la respuesta quedó en este navegador."
+      : "Tu respuesta quedó registrada."}</div>
   </div>`;
-
-  enviar();
 }
 
 /* ---------- envío ---------- */
@@ -741,35 +757,98 @@ function payload(){
   };
 }
 
-async function enviar(){
-  const data = payload();
-  const box = $("#envio");
-  try{ localStorage.setItem("masterclass_divino", JSON.stringify(data)) }catch(e){}
-
-  if(!ENDPOINT){
-    box.textContent = "Modo local: la respuesta quedó en este navegador.";
-    console.log("[master class] payload", data);
-    return;
-  }
+/* un intento de envío: "ok", "cerrado", o lanza error */
+async function postear(data){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), 20000);
   try{
     const res = await fetch(ENDPOINT,{
       method:"POST",
       headers:{"Content-Type":"text/plain;charset=utf-8"},   // request simple, sin preflight
-      body:JSON.stringify(data)
+      body:JSON.stringify(data),
+      signal:ctrl.signal
     });
     const j = await res.json().catch(()=>({}));
-    if(j.cerrado){
-      box.className = "envio err";
-      box.textContent = "El formulario cerró el miércoles 30 de septiembre, antes de que llegara esta respuesta.";
-      return;
-    }
+    if(j.cerrado) return "cerrado";
     if(!res.ok || !j.ok) throw new Error(j.error || res.status);
-    box.textContent = "Tu respuesta quedó registrada.";
-  }catch(e){
-    box.className = "envio err";
-    box.textContent = "Tu respuesta quedó guardada en este navegador. El envío falló: avisale a quien te compartió el link.";
-    console.error("[master class] envío", e);
+    return "ok";
+  }finally{ clearTimeout(t) }
+}
+
+/* Envía antes de mostrar el resultado. Reintenta una vez; si vuelve a fallar,
+   ofrece reintentar o mandar la respuesta por mail. */
+async function enviarRespuesta(btn){
+  const data = payload();
+  try{ localStorage.setItem("masterclass_divino", JSON.stringify(data)) }catch(e){}
+
+  if(!ENDPOINT){
+    console.log("[master class] payload", data);
+    estadoEnvio = "local"; paso = visibles().length+1; return render();
   }
+
+  const txt = btn.textContent;
+  btn.disabled = true; btn.textContent = "Enviando…"; btnBack.disabled = true;
+  let r = "error";
+  for(let i=0; i<2 && r==="error"; i++){
+    try{ r = await postear(data) }
+    catch(e){
+      console.error("[master class] envío, intento "+(i+1), e);
+      if(i===0) await new Promise(ok=>setTimeout(ok,1500));
+    }
+  }
+  btn.disabled = false; btn.textContent = txt; btnBack.disabled = false;
+
+  if(r==="ok"){ estadoEnvio = "ok"; paso = visibles().length+1; render(); }
+  else if(r==="cerrado") renderCierre(true);
+  else renderFallo(data);
+}
+
+/* ---------- envío fallido: reintentar, o mandar por mail ---------- */
+
+function textoRespaldo(data){
+  return "Respuesta del formulario de la master class. El envío a la hoja falló.\n\n" +
+    Object.entries(data).map(([k,v])=>`${k}: ${v===undefined ? "" : v}`).join("\n");
+}
+
+function renderFallo(data){
+  window.scrollTo(0,0);
+  bar.hidden = true; nav.hidden = true;
+  const texto = textoRespaldo(data);
+  const asunto = `Master class Divino · respuesta de ${data.q1_nombre}`;
+  const href = `mailto:${MAIL_RESPALDO}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(texto)}`;
+  shell.innerHTML = `
+  <div class="resultado">
+    <div class="eyebrow">Master class · Divino</div>
+    <h1>No pudimos enviar tu respuesta</h1>
+    <div class="card">
+      <p class="card-intro">Tus respuestas siguen guardadas en esta pantalla. Probá de nuevo o mandalas por mail: se abre tu correo con todo ya escrito, y solo tenés que tocar enviar.</p>
+    </div>
+    <div class="acciones">
+      <button type="button" class="btn primary" id="reintentar">Reintentar</button>
+      <a class="btn ghost" id="pormail" href="${esc(href)}">Mandarla por mail</a>
+      <button type="button" class="btn ghost" id="copiar">Copiar respuesta</button>
+    </div>
+    <p class="envio" id="respaldo">Si tu celular no abre el correo, copiá la respuesta y pegala en un mail a <strong>${esc(MAIL_RESPALDO)}</strong>.</p>
+  </div>`;
+
+  $("#reintentar").addEventListener("click", e=>enviarRespuesta(e.currentTarget));
+  $("#pormail").addEventListener("click", ()=>{
+    $("#respaldo").textContent = "Cuando la mandes desde tu correo, tu respuesta nos llega igual. ¡Gracias por tu tiempo!";
+  });
+  $("#copiar").addEventListener("click", async ()=>{
+    let ok = false;
+    try{ await navigator.clipboard.writeText(texto); ok = true }
+    catch(e){
+      const ta = document.createElement("textarea");
+      ta.value = texto; ta.setAttribute("readonly",""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try{ ok = document.execCommand("copy") }catch(_){}
+      ta.remove();
+    }
+    $("#respaldo").innerHTML = ok
+      ? `Respuesta copiada. Pegala en un mail a <strong>${esc(MAIL_RESPALDO)}</strong>.`
+      : `Mandala por mail a <strong>${esc(MAIL_RESPALDO)}</strong>.`;
+  });
 }
 
 /* ---------- navegación ---------- */
@@ -777,6 +856,7 @@ async function enviar(){
 btnNext.addEventListener("click",()=>{
   const V = visibles();
   if(paso>0 && paso<=V.length && !validar(V[paso-1])) return;
+  if(paso===V.length) return enviarRespuesta(btnNext);   // el último paso envía antes de avanzar
   paso++; render();
 });
 btnBack.addEventListener("click",()=>{ if(paso>0){paso--; render()} });
