@@ -6,7 +6,8 @@
 <title>Barómetro de adopción de IA — Divino</title>
 <meta name="description" content="Formulario de calibración del proceso de adopción de IA en Divino.">
 <meta name="robots" content="noindex">
-<!-- los assets viven en /assets/ del repo del sitio: desde /divino/barometro.html, ../assets/ llega ahí -->
+<!-- logo y favicons: la ruta depende de dónde se publica este archivo
+     (testbarometro: assets/ · perezmvictoria.uy/divino/: ../assets/). El resto del archivo es igual en las dos copias. -->
 <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/favicon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
@@ -554,7 +555,7 @@ const Q = [
 
 /* 10 · P11 autonomía — bandera, sin puntaje */
 {id:"q10_autonomia", tipo:"radio", eyebrow:"Una semana sin IA",
-  t:"Imaginá una semana entera sin poder usar IA. ¿Cómo sigue tu trabajo?",
+  t:"Imaginá un día entero sin poder usar uno de los chats de IA que más usás. ¿Cómo sigue tu trabajo?",
   hint:"Nos muestra cuánto de tu trabajo ya se apoya en la IA.",
   ops:[
     {t:"Igual: la uso poco",v:0},
@@ -620,25 +621,25 @@ const Q = [
 
 const PELDANOS = [
   {n:1, nombre:"Punto de partida", min:0,  max:6,  color:"var(--step-1)", texto:"var(--violet-deep)",
-   describe:"Uso ocasional, o todavía sin usarla para el trabajo.",
-   cuerpo:"Estás arrancando, y ese es el mejor momento para hacerlo con criterio.",
-   paso:"Elegí una tarea concreta de tu semana y hacela con IA acompañada la primera vez. Una sola, con resultado usable."},
+   describe:"Primeros contactos con la IA y sus conceptos.",
+   cuerpo:"Estás en el comienzo del recorrido. Cada práctica nueva que sumes se va a notar rápido.",
+   paso:"Elegí una tarea concreta de tu semana y resolvela con la herramienta de IA que Divino tenga habilitada. Una sola, algo que tenga información que se pueda compartir."},
   {n:2, nombre:"Explorando", min:7,  max:14, color:"var(--step-2)", texto:"var(--violet-deep)",
-   describe:"Preguntas sueltas, como un buscador. Cada conversación arranca de cero.",
-   cuerpo:"Ya la usás para cosas de tu trabajo. Cada conversación arranca de cero, y ahí está tu oportunidad más grande.",
-   paso:"Dar contexto antes de pedir — quién sos, para qué es, cómo tiene que quedar. Es el cambio que más mueve la calidad de lo que recibís."},
+   describe:"Algunas prácticas y conceptos ya incorporados.",
+   cuerpo:"Ya tenés algunas prácticas y conceptos. El próximo salto está en cómo le pedís a la IA.",
+   paso:"Antes de pedir algo, contale quién sos, para qué es y cómo tiene que quedar el resultado que esperás. Probalo en una tarea de trabajo y repetilo durante la semana."},
   {n:3, nombre:"Incorporando", min:15, max:22, color:"var(--step-3)", texto:"var(--white)",
-   describe:"Varias veces por semana en tareas reales, repitiendo el contexto cada vez.",
-   cuerpo:"La IA ya toca tareas reales de tu trabajo. Estás repitiendo el contexto cada vez, y eso tiene solución.",
-   paso:"Armar tu primer proyecto con instrucciones guardadas y los documentos que usás siempre. Dejás de explicar quién sos en cada conversación."},
+   describe:"Una base de prácticas y conceptos en varias áreas.",
+   cuerpo:"Tenés una base en varias áreas del recorrido. El próximo salto está en que tu contexto quede guardado y listo para cada conversación.",
+   paso:"Guardá el contexto que repetís en un proyecto con instrucciones y los documentos que usás siempre. Si ya tenés proyectos, revisá qué archivos van al proyecto y cuáles quedan en el chat."},
   {n:4, nombre:"Integrando", min:23, max:31, color:"var(--step-4)", texto:"var(--white)",
-   describe:"Proyectos armados: la IA ya toca tareas centrales del rol.",
-   cuerpo:"Tenés la herramienta configurada y trabajando en el centro de tu rol.",
-   paso:"Criterio. Decidir con intención qué le delegás, qué te reservás, y cómo verificás lo que te devuelve antes de usarlo."},
+   describe:"La mayor parte de las prácticas y conceptos.",
+   cuerpo:"Manejás la mayor parte del recorrido. El próximo salto está en volver reusable para más gente lo que ya te funciona.",
+   paso:"Convertí lo que te funciona en algo que se reusa: pedidos guardados, archivos con nombre y descripción, y una skill, un conector o un agente para una tarea que se repite."},
   {n:5, nombre:"Referente", min:32, max:40, color:"var(--step-5)", texto:"var(--white)",
-   describe:"Procesos rediseñados, y cosas armadas que otras personas usan.",
-   cuerpo:"Rediseñaste cómo trabajás y producís cosas que antes quedaban fuera de tu alcance.",
-   paso:"Que lo que armaste llegue a tu equipo. Tu configuración sirve a más gente que vos."}
+   describe:"Dominio amplio de las prácticas y de los conceptos avanzados.",
+   cuerpo:"Dominás buena parte de lo que la IA ofrece hoy. Lo que sabés puede servirle a más gente en Divino.",
+   paso:"Llevá lo que armaste a donde trabaja tu equipo, con instrucciones para que otra persona lo use y lo sostenga sin vos."}
 ];
 
 /* Pasos por dimensión y por bandera.
