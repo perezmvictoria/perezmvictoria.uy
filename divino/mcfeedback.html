@@ -52,8 +52,9 @@ strong{font-weight:700}
 
 /* ---------- encabezado del sitio ---------- */
 .site{background:rgba(255,255,255,0.95);border-bottom:1px solid var(--border-default)}
-.site-inner{max-width:800px;margin:0 auto;padding:0 16px;height:56px;display:flex;align-items:center}
-.site .logo{height:30px;width:auto;display:block}
+.site-inner{max-width:800px;margin:0 auto;padding:0 8px;height:72px;display:flex;align-items:center}
+/* mismo tamaño que el logo del barómetro: 60 px en celular, 78 px desde 768 px */
+.site .logo{height:60px;width:auto;display:block}
 
 /* ---------- barra de progreso: la que queda fija ---------- */
 .bar{
@@ -216,8 +217,8 @@ input.invalid,textarea.invalid{border-color:var(--error);background:var(--error-
 
 @media(max-width:559px){ .bar-long{display:none} }
 @media(min-width:768px){
-  .site-inner{height:64px;padding:0 40px}
-  .site .logo{height:36px}
+  .site-inner{height:88px;padding:0 28px}
+  .site .logo{height:78px}
   .bar-inner{padding:16px 40px 18px;gap:12px}
   .bar-title{font-size:18px}
   .shell{padding:40px 40px 48px}
@@ -257,7 +258,7 @@ input.invalid,textarea.invalid{border-color:var(--error);background:var(--error-
 <body>
 
 <header class="site">
-  <div class="site-inner"><img class="logo" src="../assets/logo-full-white.png" alt="Victoria Perez" width="90" height="30"></div>
+  <div class="site-inner"><img class="logo" src="../assets/logo-full-white.png" alt="Victoria Perez" width="180" height="60"></div>
 </header>
 
 <div class="bar" id="bar" hidden>
